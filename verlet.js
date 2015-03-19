@@ -262,10 +262,12 @@ function getPos(x) {
 
 Box.prototype.draw = function () {
   //console.log('Box#draw')
+  /*
   matrix3d.applyTransform(this.elem,
     [this.startTopLeft, this.startBottomLeft, this.startTopRight, this.startBottomRight].map(getPos),
     [this.topLeft, this.bottomLeft, this.topRight, this.bottomRight].map(getPos)
   );
+  */
   /*
 
    var translate;
