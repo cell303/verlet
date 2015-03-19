@@ -178,31 +178,83 @@ function Box(elem, options) {
   //$('#ruler-horizontal-' + this.i).css({top: rect.top});
   //$('#ruler-vertical-' + this.i).css({left: rect.left});
 
-  this.elem.addEventListener('touchstart', function (e) {
-    e.stopPropagation();
-    this.verlet.draggedEntity = this;
-    var t = e.targetTouches[0];
-    this.verlet.mouseStart.x = t.pageX;
-    this.verlet.mouseStart.y = t.pageY;
-    this.verlet.mouse.x = t.pageX;
-    this.verlet.mouse.y = t.pageY;
-    this.startPositions = this.particles.map(function (particle) {
-      return new Vec2(0, 0).mutableSet(particle.pos)
-    });
-  }.bind(this));
+  this.onTouchStart = Box.prototype.onTouchStart.bind(this);
+  this.onTouchMove = Box.prototype.onTouchMove.bind(this);
+  this.onTouchEnd = Box.prototype.onTouchEnd.bind(this);
 
-  this.elem.addEventListener('touchmove', function (e) {
-    e.stopPropagation();
-    var t = e.targetTouches[0];
-    this.verlet.mouse.x = t.pageX;
-    this.verlet.mouse.y = t.pageY;
-  }.bind(this));
+  this.elem.addEventListener('touchstart', this.onTouchStart);
 
-  this.elem.addEventListener('touchend', function (e) {
-    e.stopPropagation();
-    this.verlet.draggedEntity = null;
-  }.bind(this));
+  this.onMouseDown = Box.prototype.onMouseDown.bind(this);
+  this.onMouseMove = Box.prototype.onMouseMove.bind(this);
+  this.onMouseUp = Box.prototype.onMouseUp.bind(this);
+
+  this.elem.addEventListener('mousedown', this.onMouseDown);
 }
+
+Box.prototype.onMouseDown = function (e) {
+  e.stopPropagation();
+  this.onAnyStart.call(this, e);
+
+  document.addEventListener('mousemove', this.onMouseMove);
+  document.addEventListener('mouseup', this.onMouseUp);
+};
+
+Box.prototype.onTouchStart = function (e) {
+  e.stopPropagation();
+  var t = e.targetTouches[0];
+  this.onAnyStart.call(this, t);
+
+  document.addEventListener('touchmove', this.onTouchMove);
+  document.addEventListener('touchend', this.onTouchEnd);
+};
+
+
+Box.prototype.onTouchMove= function (e) {
+  e.stopPropagation();
+  var t = e.targetTouches[0];
+  this.onAnyMove.call(this, t);
+};
+
+Box.prototype.onMouseMove = function (e) {
+  e.stopPropagation();
+  this.onAnyMove.call(this, e);
+};
+
+Box.prototype.onTouchEnd = function (e) {
+  e.stopPropagation();
+  this.onAnyEnd.call(this);
+
+  document.removeEventListener('touchmove', this.onTouchMove);
+  document.removeEventListener('touchend', this.onTouchEnd);
+};
+
+Box.prototype.onMouseUp = function (e) {
+  e.stopPropagation();
+  this.onAnyEnd.call(this);
+
+  document.removeEventListener('mousemove', this.onMouseMove);
+  document.removeEventListener('mouseup', this.onMouseUp);
+};
+
+Box.prototype.onAnyStart = function (t) {
+  this.verlet.draggedEntity = this;
+  this.verlet.mouseStart.x = t.pageX;
+  this.verlet.mouseStart.y = t.pageY;
+  this.verlet.mouse.x = t.pageX;
+  this.verlet.mouse.y = t.pageY;
+  this.startPositions = this.particles.map(function (particle) {
+    return new Vec2(0, 0).mutableSet(particle.pos)
+  });
+};
+
+Box.prototype.onAnyMove = function (t) {
+  this.verlet.mouse.x = t.pageX;
+  this.verlet.mouse.y = t.pageY;
+};
+
+Box.prototype.onAnyEnd = function (t) {
+  this.verlet.draggedEntity = null;
+};
 
 function getPos(x) {
   return x.pos;
